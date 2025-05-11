@@ -1,0 +1,29 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Term Project Test
+      id: term-project-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Term Project Test
+        setup-command: ''
+        command: gradle test
+        timeout: 10
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TERM-PROJECT-TEST_RESULTS: "${{steps.term-project-test.outputs.result}}"
+      with:
+        runners: term-project-test
