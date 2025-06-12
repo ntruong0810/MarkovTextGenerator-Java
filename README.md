@@ -16,6 +16,7 @@ N/A
 ### Run command
 '''
 gradle test
+java -cp build/classes/java/main edu.pasadena.cs.cs03b.MarkovApp
 '''
 
 ### Notes

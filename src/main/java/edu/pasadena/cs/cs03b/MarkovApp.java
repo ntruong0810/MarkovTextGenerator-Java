@@ -11,12 +11,20 @@ public class MarkovApp {
         // ask for filename
         System.out.print("Enter input filename: ");
         String filename = input.nextLine().trim();
-        
+
+        // Prefix the speeches directory path
+        String fullPath = "src/Speeches/" + filename;
+
+        File file = new File(fullPath);
+        if (!file.exists()) {
+            System.out.println("Error: File not found " + file.getPath());
+            return;
+        }
+
         DreamMap map = new DreamMap(100);
-        buildMarkovChain(filename, map);
+        buildMarkovChain(fullPath, map);  // <-- pass the full path here
 
         // ask for words limit
-        // int wordLimit = 100;
         System.out.print("Enter number of words to generate: ");
         int wordLimit = Integer.parseInt(input.nextLine().trim());
 
@@ -25,12 +33,10 @@ public class MarkovApp {
         String choice = input.nextLine().trim().toLowerCase();
 
         String startWord;
-        if(choice.equals("y")){
+        if (choice.equals("y")) {
             System.out.print("Enter starting word: ");
             startWord = input.nextLine().trim().toLowerCase();
-        } 
-        else 
-        {
+        } else {
             startWord = map.getRandomKey();
             System.out.println("Randomly selected starting word: " + startWord);
         }
@@ -45,41 +51,58 @@ public class MarkovApp {
         String pomdpText = pomdpModel.generate(wordLimit, startWord);
 
         System.out.println("Random Model Text Generator:");
-        System.out.println(randomText +"\n");
+        System.out.println(randomText + "\n");
 
         System.out.println("Probabilistic Model Text Generator:");
-        System.out.println(weightedText +"\n");
+        System.out.println(weightedText + "\n");
 
         System.out.println("POMDP Model Text Generator:");
-        System.out.println(pomdpText +"\n");
+        System.out.println(pomdpText + "\n");
+
+        input.close();
     }
 
-    private static void buildMarkovChain(String filename, DreamMap map) {
+    private static void buildMarkovChain(String fullPath, DreamMap map) {
+        File file = new File(fullPath);
+
+        if (!file.exists()) {
+            System.err.println("Error: File not found -> " + fullPath);
+            System.err.println("Looking for fallback file in 'Speeches/' directory...");
+
+            File fallbackDir = new File("Speeches");
+            File[] txtFiles = fallbackDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".txt"));
+
+            if (txtFiles == null || txtFiles.length == 0) {
+                System.err.println("No .txt files found in Speeches/ folder. Exiting.");
+                System.exit(1);
+            }
+
+            file = txtFiles[0];
+            System.out.println("Using fallback file: " + file.getName());
+        }
+
         try {
-            Scanner scanner = new Scanner(new File(filename));
+            Scanner scanner = new Scanner(file);
             String prev = null;
 
-            while (scanner.hasNext()){
+            while (scanner.hasNext()) {
                 String rawToken = scanner.next();
-                // converting to lowercase
                 String lowercaseToken = rawToken.toLowerCase();
 
-                // removing non-alphabetic characters
                 StringBuilder cleaned = new StringBuilder();
-                for(char c : lowercaseToken.toCharArray()){
-                    if(c >= 'a' && c <= 'z'){
+                for (char c : lowercaseToken.toCharArray()) {
+                    if (c >= 'a' && c <= 'z') {
                         cleaned.append(c);
                     }
                 }
-                
+
                 String word = cleaned.toString();
-                if (word.isEmpty()) 
+                if (word.isEmpty())
                     continue;
 
-                if (prev != null){
+                if (prev != null) {
                     DreamList list = map.get(prev);
-                    if (list == null) 
-                    {
+                    if (list == null) {
                         list = new DreamList(2);
                         map.put(prev, list);
                     }
@@ -90,10 +113,9 @@ public class MarkovApp {
             }
 
             scanner.close();
-        } 
-        catch (FileNotFoundException e) 
-        {
-            System.err.println("Error: File not found " + filename);
+        } catch (FileNotFoundException e) {
+            System.err.println("Unexpected error: Could not open file after fallback.");
+            System.exit(1);
         }
     }
 }
