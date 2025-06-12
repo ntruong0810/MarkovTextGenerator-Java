@@ -14,12 +14,12 @@ public class POMDPModel {
     }
 
     // Generate a sequence of words using the POMDP logic
-    public String generate(int wordLimit){
+    public String generate(int wordLimit, String start){
         if (map.size() == 0) 
             return ""; 
 
         StringBuilder sb = new StringBuilder();
-        String current = map.getRandomKey(); // Start with a random key from the map
+        String current = start;
         sb.append(current);
 
         for (int i = 1; i < wordLimit; i++){
@@ -41,5 +41,12 @@ public class POMDPModel {
             current = next; 
         }
         return sb.toString();
+    }
+
+    // generate with random starting word
+    public String generate(int wordLimit){
+        if (map.size() == 0) 
+            return "";
+        return generate(wordLimit, map.getRandomKey());
     }
 }

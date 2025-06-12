@@ -6,20 +6,43 @@ import java.util.Scanner;
 
 public class MarkovApp {
     public static void main(String[] args) {
-        String filename = "src/Speeches/Speech_on_Economic_Mobility_Obama.txt"; 
+        Scanner input = new Scanner(System.in);
+
+        // ask for filename
+        System.out.print("Enter input filename: ");
+        String filename = input.nextLine().trim();
+        
         DreamMap map = new DreamMap(100);
         buildMarkovChain(filename, map);
 
-        int wordLimit = 100;
+        // ask for words limit
+        // int wordLimit = 100;
+        System.out.print("Enter number of words to generate: ");
+        int wordLimit = Integer.parseInt(input.nextLine().trim());
+
+        // ask if user wants to specify starting word
+        System.out.print("Do you want to specify a starting word? (y/n): ");
+        String choice = input.nextLine().trim().toLowerCase();
+
+        String startWord;
+        if(choice.equals("y")){
+            System.out.print("Enter starting word: ");
+            startWord = input.nextLine().trim().toLowerCase();
+        } 
+        else 
+        {
+            startWord = map.getRandomKey();
+            System.out.println("Randomly selected starting word: " + startWord);
+        }
 
         RandomModel randomModel = new RandomModel(map);
         String randomText = randomModel.generate(wordLimit);
 
         WeightedModel weightedModel = new WeightedModel(map);
-        String weightedText = weightedModel.generate(wordLimit);
+        String weightedText = weightedModel.generate(wordLimit, startWord);
 
         POMDPModel pomdpModel = new POMDPModel(map, 0.8);
-        String pomdpText = pomdpModel.generate(wordLimit);
+        String pomdpText = pomdpModel.generate(wordLimit, startWord);
 
         System.out.println("Random Model Text Generator:");
         System.out.println(randomText +"\n");
