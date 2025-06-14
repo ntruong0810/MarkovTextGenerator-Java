@@ -18,6 +18,7 @@ public class MarkovApp {
         File file = new File(fullPath);
         if (!file.exists()) {
             System.out.println("Error: File not found " + file.getPath());
+            input.close();
             return;
         }
 
@@ -59,8 +60,60 @@ public class MarkovApp {
         System.out.println("POMDP Model Text Generator:");
         System.out.println(pomdpText + "\n");
 
+        System.out.print("Do you want to use an N-Gram Model? (y/n): ");
+        String useNGram = input.nextLine().trim().toLowerCase();
+
+        if (useNGram.equals("y")) {
+        System.out.print("Enter value of n (e.g., 2 or 3): ");
+        int n = Integer.parseInt(input.nextLine().trim());
+        if (n < 2) {
+            System.out.println("n must be at least 2. Using default n = 2.");
+            n = 2;
+        }
+
+        NGramModel ngramModel = new NGramModel(n);
+        ngramModel.train(tokenizeFile(fullPath));
+
+        // Ask if the user wants to specify a starting phrase
+        System.out.print("Do you want to specify a starting word or phrase? (y/n): ");
+        String specifyStart = input.nextLine().trim().toLowerCase();
+
+        String ngramStart = null;
+        if (specifyStart.equals("y")) {
+            System.out.print("Enter starting word or phrase: ");
+            ngramStart = input.nextLine().trim().toLowerCase();
+        }
+
+        // if ngramStart is null or empty, use a random starting phrase
+        // otherwise, use the specified starting phrase
+        String ngramText = (ngramStart != null && !ngramStart.isEmpty())
+            ? ngramModel.generate(wordLimit, ngramStart)
+            : ngramModel.generate(wordLimit);
+
+        System.out.println("N-Gram Model (n = " + n + ") Text Generator:");
+        System.out.println(ngramText + "\n");
+        }
+
         input.close();
     }
+
+    private static java.util.List<String> tokenizeFile(String filepath) {
+        java.util.List<String> tokens = new java.util.ArrayList<>();
+        try {
+            Scanner scanner = new Scanner(new File(filepath));
+            while (scanner.hasNext()) {
+                String word = scanner.next().toLowerCase().replaceAll("[^a-z]", "");
+                if (!word.isEmpty()) {
+                tokens.add(word);
+                }
+            }
+            scanner.close();
+        } 
+        catch (FileNotFoundException e) 
+            System.err.println("Error reading file for NGramModel: " + filepath);
+        
+        return tokens;
+        }
 
     private static void buildMarkovChain(String fullPath, DreamMap map) {
         File file = new File(fullPath);
@@ -73,7 +126,7 @@ public class MarkovApp {
             File[] txtFiles = fallbackDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".txt"));
 
             if (txtFiles == null || txtFiles.length == 0) {
-                System.err.println("No .txt files found in Speeches/ folder. Exiting.");
+                System.err.println("Cant open file");
                 System.exit(1);
             }
 
@@ -114,7 +167,7 @@ public class MarkovApp {
 
             scanner.close();
         } catch (FileNotFoundException e) {
-            System.err.println("Unexpected error: Could not open file after fallback.");
+            System.err.println("Can not open file");
             System.exit(1);
         }
     }
