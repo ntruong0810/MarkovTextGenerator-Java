@@ -109,10 +109,10 @@ public class MarkovApp {
             }
             scanner.close();
         } 
-        catch (FileNotFoundException e) 
+        catch (FileNotFoundException e) {
             System.err.println("Error reading file for NGramModel: " + filepath);
-        
-        return tokens;
+        }
+            return tokens;
         }
 
     private static void buildMarkovChain(String fullPath, DreamMap map) {
